@@ -1,23 +1,23 @@
 <?php
 session_start();
 
-// Vérifier accès admin
+
 $adresse_serveur = $_SERVER['REMOTE_ADDR'];
 if (!($adresse_serveur === '127.0.0.1' || $adresse_serveur === '::1')) {
     header('Location: index.php');
     exit;
 }
 
-// Configuration
+
 $dossier_config = 'config/';
 $dossier_uploads = 'fichiers/';
 $dossier_codes = 'codes/';
 $fichier_config = $dossier_config . 'config.json';
 
-// Charger config
+
 $config = json_decode(file_get_contents($fichier_config), true);
 
-// Statistiques
+
 $fichiers = array_diff(scandir($dossier_uploads), ['.', '..']);
 $total_fichiers = count($fichiers);
 $taille_totale = 0;
@@ -25,7 +25,7 @@ foreach ($fichiers as $fichier) {
     $taille_totale += filesize($dossier_uploads . $fichier);
 }
 
-// Codes actifs
+
 $codes_actifs = 0;
 $codes_fichiers = glob($dossier_codes . '*.json');
 foreach ($codes_fichiers as $fichier_code) {

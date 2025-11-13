@@ -8,11 +8,9 @@ $dossier_uploads = 'fichiers/';
 $dossier_codes = 'codes/';
 $fichier_config = $dossier_config . 'config.json';
 
-
 if (!file_exists($dossier_config)) mkdir($dossier_config, 0755, true);
 if (!file_exists($dossier_uploads)) mkdir($dossier_uploads, 0755, true);
 if (!file_exists($dossier_codes)) mkdir($dossier_codes, 0755, true);
-
 
 if (file_exists($fichier_config)) {
     $config_content = file_get_contents($fichier_config);
@@ -21,35 +19,44 @@ if (file_exists($fichier_config)) {
     $config = [
         'admin_nom' => 'DANIEL TIANA',
         'message_bienvenue' => '2Amindra - simulation transfert de fichier',
-        'codes_acces' => []
+        'codes_acces' => [],
+        'code_admin' => 'ADMIN12345' 
     ];
     file_put_contents($fichier_config, json_encode($config, JSON_PRETTY_PRINT));
 }
 
-
 $adresse_serveur = $_SERVER['REMOTE_ADDR'];
-$est_admin = ($adresse_serveur === '127.0.0.1' || $adresse_serveur === '::1');
+$code_admin_special = $config['code_admin'] ?? 'ADMIN12345';
 
+
+$est_admin = false;
+if (isset($_SESSION['admin_connecte']) && $_SESSION['admin_connecte'] === true) {
+    $est_admin = true;
+}
 
 if (isset($_POST['action']) && $_POST['action'] === 'connexion_visiteur' && isset($_POST['code_acces'])) {
     $code_saisi = trim($_POST['code_acces']);
+    
+    
+    if ($code_saisi === $code_admin_special) {
+        $_SESSION['admin_connecte'] = true;
+        $_SESSION['code_utilise'] = $code_saisi;
+        header('Location: index.php');
+        exit;
+    }
+    
+    
     $fichier_code = $dossier_codes . $code_saisi . '.json';
-
     if (file_exists($fichier_code)) {
         $infos_code = json_decode(file_get_contents($fichier_code), true);
-
         if (is_array($infos_code) && isset($infos_code['actif']) && $infos_code['actif']) {
             $expiration = $infos_code['date_expiration'] ?? date('Y-m-d H:i:s', strtotime('+30 days'));
-
             if (strtotime($expiration) > time()) {
                 $_SESSION['visiteur_connecte'] = true;
                 $_SESSION['code_utilise'] = $code_saisi;
                 $_SESSION['expiration'] = time() + (30 * 24 * 60 * 60);
-
-
                 $infos_code['derniere_utilisation'] = date('Y-m-d H:i:s');
                 file_put_contents($fichier_code, json_encode($infos_code, JSON_PRETTY_PRINT));
-
                 header('Location: index.php');
                 exit;
             }
@@ -103,7 +110,6 @@ if (file_exists($dossier_uploads)) {
             color: var(--dark);
         }
 
-
         .sidebar {
             width: var(--sidebar-width);
             background: var(--white);
@@ -141,6 +147,10 @@ if (file_exists($dossier_uploads)) {
             margin-top: 10px;
         }
 
+        .status-badge.admin {
+            background: var(--warning);
+        }
+
         .sidebar-nav {
             padding: 20px 0;
         }
@@ -168,7 +178,6 @@ if (file_exists($dossier_uploads)) {
             width: 20px;
             text-align: center;
         }
-
 
         .main-content {
             flex: 1;
@@ -199,7 +208,7 @@ if (file_exists($dossier_uploads)) {
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
 
-        /* Forms */
+       
         .form-group {
             margin-bottom: 25px;
         }
@@ -229,7 +238,6 @@ if (file_exists($dossier_uploads)) {
             outline: none;
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
-
 
         .btn {
             padding: 2px 10px;
@@ -322,7 +330,6 @@ if (file_exists($dossier_uploads)) {
         tr:hover {
             background: #f8f9fa;
         }
-
 
         .alert {
             padding: 15px 20px;
@@ -421,7 +428,6 @@ if (file_exists($dossier_uploads)) {
             border-left: 4px solid var(--primary);
         }
 
-
         .drop-zone {
             border: 2px dashed #bdc3c7;
             border-radius: 10px;
@@ -448,7 +454,6 @@ if (file_exists($dossier_uploads)) {
             color: var(--primary);
         }
 
-
         .file-info {
             background: #e8f4fd;
             padding: 15px;
@@ -460,7 +465,6 @@ if (file_exists($dossier_uploads)) {
         .file-info.active {
             display: block;
         }
-
 
         @media (max-width: 768px) {
             .sidebar {
@@ -503,9 +507,8 @@ if (file_exists($dossier_uploads)) {
         <div class="sidebar-header">
             <h1>Bienvenue</h1>
             <?php if ($est_admin): ?>
-                            <p><?php echo htmlspecialchars($config['admin_nom']); ?></p>
-
-                <span class="status-badge">Daniel</span>
+                <p><?php echo htmlspecialchars($config['admin_nom']); ?></p>
+                <span class="status-badge admin">Administrateur</span>
             <?php elseif (isset($_SESSION['visiteur_connecte'])): ?>
                 <span class="status-badge">Visiteur</span>
             <?php endif; ?>
@@ -517,12 +520,14 @@ if (file_exists($dossier_uploads)) {
                     Tableau de bord
                 </a>
                 <a href="gestion.php?action=codes" class="nav-item">
-                    codes
+                    Codes
                 </a>
                 <a href="gestion.php?action=parametres" class="nav-item">
-                    Parametres
+                    Paramètres
                 </a>
-
+                <a href="deconnexion_admin.php" class="nav-item">
+                    Déconnexion Admin
+                </a>
             <?php elseif (isset($_SESSION['visiteur_connecte'])): ?>
                 <a href="index.php" class="nav-item active">
                     <i>📁</i> Lisitra
@@ -534,17 +539,17 @@ if (file_exists($dossier_uploads)) {
         </nav>
     </div>
 
-
     <div class="main-content">
         <div class="content-header">
             <h2>
-                <?php htmlspecialchars($config['message_bienvenue']);
+                <?php 
+                echo htmlspecialchars($config['message_bienvenue']);
                 if(isset($_SESSION['visiteur_connecte'])){
-                    echo "Vous pouvez seulement ajouter";
+                    echo " - Vous pouvez seulement ajouter";
                 }
                 ?>
             </h2>
-            <p>TRansferer</p>
+            <p>Transferer</p>
         </div>
 
         <?php if (isset($_GET['message'])): ?>
@@ -560,7 +565,6 @@ if (file_exists($dossier_uploads)) {
         <?php endif; ?>
 
         <?php if ($est_admin): ?>
-
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Fichiers</h3>
@@ -593,7 +597,7 @@ if (file_exists($dossier_uploads)) {
                     }
                     ?>
                     <div class="stat-number"><?php echo $codes_actifs; ?></div>
-                    <p>@</p> <?php echo count($codes_fichiers); ?> kody</p>
+                    <p>Sur <?php echo count($codes_fichiers); ?> codes</p>
                 </div>
             </div>
         <?php endif; ?>
@@ -608,15 +612,16 @@ if (file_exists($dossier_uploads)) {
                         <label>Entrer le code</label>
                         <input type="password" name="code_acces" required placeholder="Entrez votre code...">
                     </div>
-                    <button type="submit" class="btn btn-primary">=>Entre la connexion</button>
+                    <button type="submit" class="btn btn-primary">=> Entre la connexion</button>
                 </form>
+                <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                    <small>💡 <strong>Admin :</strong> Utilisez le code spécial pour accéder au panel administrateur</small>
+                </div>
             </div>
         <?php else: ?>
-
+            <!-- Le reste de votre code pour l'interface utilisateur -->
             <div class="content-card">
                 <h3>Ajout d'un fichier</h3>
-
-
                 <div class="drop-zone" id="dropZone">
                     <i>📁</i>
                     <h4>Glisser ici</h4>
@@ -629,7 +634,6 @@ if (file_exists($dossier_uploads)) {
                     <span id="fileName"></span>
                     <span id="fileSize"></span>
                 </div>
-
 
                 <div class="upload-container" id="uploadContainer" style="display: none;">
                     <div class="upload-info">
@@ -652,19 +656,6 @@ if (file_exists($dossier_uploads)) {
                         Envoyer
                     </button>
                 </form>
-
-
-                <!-- <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-                    <h4>mandatsaka</h4>
-                    <form method="POST" enctype="multipart/form-data" action="upload.php" id="classicForm">
-                        <div class="form-group">
-                            <input type="file" name="fichier" id="classicFileInput" required>
-                        </div>
-                        <button type="submit" class="btn btn-success">
-                            envoyer
-                        </button>
-                    </form>
-                </div> -->
             </div>
 
             <div class="content-card">
@@ -714,7 +705,7 @@ if (file_exists($dossier_uploads)) {
                     </div>
                 <?php else: ?>
                     <p style="text-align: center; padding: 30px; color: var(--gray);">
-                        AUcun fichiers
+                        Aucun fichiers
                     </p>
                 <?php endif; ?>
             </div>
@@ -722,17 +713,16 @@ if (file_exists($dossier_uploads)) {
     </div>
 
     <script>
+        
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('active');
         }
-
 
         document.querySelector('input[name="code_acces"]')?.focus();
 
         function confirmerSuppression() {
             return confirm('tena sure amzany aa???');
         }
-
 
         document.addEventListener('click', function(e) {
             const sidebar = document.querySelector('.sidebar');
@@ -741,7 +731,6 @@ if (file_exists($dossier_uploads)) {
                 sidebar.classList.remove('active');
             }
         });
-
 
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
@@ -758,7 +747,6 @@ if (file_exists($dossier_uploads)) {
         const uploadForm = document.getElementById('uploadForm');
 
         let uploadStartTime;
-
 
         dropZone.addEventListener('click', () => fileInput.click());
 
@@ -826,7 +814,6 @@ if (file_exists($dossier_uploads)) {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-
         uploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -876,9 +863,7 @@ if (file_exists($dossier_uploads)) {
             progressText.textContent = percentRounded + '%';
 
             if (percentRounded < 100) {
-                statusText.textContent = `sendeoo... ${percentRounded}%`;
-
-
+                statusText.textContent = `envoyer ${percentRounded}%`;
                 if (loaded && total) {
                     const currentTime = Date.now();
                     const timeElapsed = (currentTime - uploadStartTime) / 1000;
@@ -886,16 +871,14 @@ if (file_exists($dossier_uploads)) {
                     speedText.textContent = `${formatFileSize(speed)}/s`;
                 }
             } else {
-                statusText.textContent = 'mamarana...';
+                statusText.textContent = 'Finalisation';
                 speedText.textContent = '';
             }
         }
 
-
-        document.getElementById('classicForm').addEventListener('submit', function() {
+        document.getElementById('classicForm')?.addEventListener('submit', function() {
             document.getElementById('uploadContainer').style.display = 'block';
         });
     </script>
 </body>
-
 </html>

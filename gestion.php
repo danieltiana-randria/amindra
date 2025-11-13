@@ -3,14 +3,14 @@ session_start();
 error_reporting(0);
 ini_set('display_errors', 0);
 
-// Vérifier accès admin
+
 $adresse_serveur = $_SERVER['REMOTE_ADDR'];
 if (!($adresse_serveur === '127.0.0.1' || $adresse_serveur === '::1')) {
     header('Location: index.php');
     exit;
 }
 
-// Configuration
+
 $dossier_config = 'config/';
 $dossier_codes = 'codes/';
 $fichier_config = $dossier_config . 'config.json';
@@ -26,7 +26,7 @@ if (file_exists($fichier_config)) {
     ];
 }
 
-// Traitement des actions
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'sauvegarder_parametres') {
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: gestion.php?action=parametres&message=sauvegarde_ok');
             exit;
         } elseif ($_POST['action'] === 'creer_code_auto') {
-            // Génération automatique
+            
             $nouveau_code = substr(md5(uniqid() . time()), 0, 8);
             $fichier_code = $dossier_codes . $nouveau_code . '.json';
 
@@ -53,9 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: gestion.php?action=codes&message=code_auto_cree&code=' . $nouveau_code);
             exit;
         } elseif ($_POST['action'] === 'creer_code_manuel') {
-            // Création manuelle
+            
             $code_manuel = trim($_POST['code_manuel'] ?? '');
-            $code_manuel = preg_replace('/[^a-zA-Z0-9]/', '', $code_manuel); // Nettoyer le code
+            $code_manuel = preg_replace('/[^a-zA-Z0-9]/', '', $code_manuel); 
 
             if (empty($code_manuel)) {
                 header('Location: gestion.php?action=codes&message=code_vide');
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Actions GET pour codes
+
 if (isset($_GET['action_code'])) {
     $code = $_GET['code'] ?? '';
     if ($code) {
