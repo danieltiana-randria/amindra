@@ -134,7 +134,7 @@ foreach ($codes_fichiers as $fichier_code) {
     <div class="container">
         <div class="header">
             <h1>Tableau de bord Administrateur</h1>
-            <p>Gestion complète du système de transfert</p>
+            <p>TRANSFERT LOCAL</p>
         </div>
 
         <div class="stats">

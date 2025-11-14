@@ -465,7 +465,7 @@ $action = $_GET['action'] ?? 'codes';
 
                 <div class="tabs">
                     <button class="tab active" onclick="showTab('auto')">Auto</button>
-                    <button class="tab" onclick="showTab('manuel')">Ampidirina</button>
+                    <button class="tab" onclick="showTab('manuel')">SAISISSER</button>
                 </div>
 
             
