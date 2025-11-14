@@ -530,12 +530,17 @@ if (file_exists($dossier_uploads)) {
                 </a>
             <?php elseif (isset($_SESSION['visiteur_connecte'])): ?>
                 <a href="index.php" class="nav-item active">
-                    <i>📁</i> Lisitra
+                     Lisitra
                 </a>
                 <a href="deconnexion.php" class="nav-item">
                     <i>🚪</i> Déconnexion
-                </a>
+
             <?php endif; ?>
+                            </a>
+
+                                <a href="#" class="nav-item">
+                    version 1.0
+                </a>
         </nav>
     </div>
 
@@ -549,7 +554,7 @@ if (file_exists($dossier_uploads)) {
                 }
                 ?>
             </h2>
-            <p>Transferer</p>
+            <p>Mode de demo pour le prototype de systme de transfert fichier local</p>
         </div>
 
         <?php if (isset($_GET['message'])): ?>
@@ -603,7 +608,7 @@ if (file_exists($dossier_uploads)) {
         <?php endif; ?>
 
         <?php if (!isset($_SESSION['visiteur_connecte']) && !$est_admin): ?>
-            <!-- Formulaire de connexion -->
+
             <div class="content-card">
                 <h3>Entrer le code d'abord</h3>
                 <form method="POST">
@@ -619,11 +624,14 @@ if (file_exists($dossier_uploads)) {
                 </div>
             </div>
         <?php else: ?>
-            <!-- Le reste de votre code pour l'interface utilisateur -->
+  
             <div class="content-card">
                 <h3>Ajout d'un fichier</h3>
+                <p class="alert-error" style="padding: 1rem 0.8rem; font-weight:bold">
+                    La ressource est limité pour ce mode demo
+                </p>
                 <div class="drop-zone" id="dropZone">
-                    <i>📁</i>
+                
                     <h4>Glisser ici</h4>
                     <p>OU clicker</p>
                     <input type="file" id="fileInput" style="display: none;" name="fichier">
